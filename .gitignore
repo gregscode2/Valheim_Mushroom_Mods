@@ -1,6 +1,35 @@
-# CI scratch: reference assemblies fetched by .github/workflows/release.yml
+# ---- CI scratch ----
+# Reference assemblies fetched by .github/workflows/release.yml.
 ci-refs/
 release-artifacts/
 
+# ---- Build output ----
 # No built DLL is committed; releases carry the artifacts.
+[Bb]in/
+[Oo]bj/
 dist/
+
+# ---- Game assemblies (copyrighted - never commit) ----
+# Referenced from the local Steam install, and fetched by CI from the free
+# dedicated server. Vendored copies under Libs/ are no longer tracked.
+Libs/
+Libraries/
+assembly_*.dll
+Assembly-CSharp.dll
+UnityEngine*.dll
+BepInEx*.dll
+0Harmony*.dll
+
+# ---- Local machine config ----
+Directory.Build.user.props
+Local.props
+*.local.props
+
+# ---- Editors / OS noise ----
+.vs/
+.idea/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
+.DS_Store

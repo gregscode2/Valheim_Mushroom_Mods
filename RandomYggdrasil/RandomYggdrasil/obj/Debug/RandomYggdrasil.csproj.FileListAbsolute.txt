@@ -1,6 +1,0 @@
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\bin\Debug\RandomYggdrasil.dll
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\bin\Debug\RandomYggdrasil.pdb
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\obj\Debug\RandomYggdrasil.csproj.AssemblyReference.cache
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\obj\Debug\RandomYggdrasil.csproj.CoreCompileInputs.cache
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\obj\Debug\RandomYggdrasil.dll
-C:\Users\Abortipus\source\repos\RandomYggdrasil\RandomYggdrasil\obj\Debug\RandomYggdrasil.pdb

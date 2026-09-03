@@ -30,24 +30,41 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <!--
+    Game and BepInEx assemblies are referenced from the local install rather than
+    vendored into Libs\, so no copyrighted binaries are committed. CI passes
+    ValheimManaged and BepInExCore as MSBuild global properties, which override
+    everything below; locally the Steam registry is consulted first so a normal
+    install needs no configuration.
+  -->
+  <PropertyGroup>
+    <ValheimDir Condition=" '$(ValheimDir)' == '' ">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 892970', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</ValheimDir>
+    <ValheimDir Condition=" '$(ValheimDir)' == '' ">C:\Program Files (x86)\Steam\steamapps\common\Valheim</ValheimDir>
+    <ValheimManaged Condition=" '$(ValheimManaged)' == '' ">$(ValheimDir)\valheim_Data\Managed</ValheimManaged>
+    <BepInExCore Condition=" '$(BepInExCore)' == '' ">$(ValheimDir)\BepInEx\core</BepInExCore>
+  </PropertyGroup>
+  <Target Name="CheckValheimRefs" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(ValheimManaged)\assembly_valheim.dll')"
+           Text="assembly_valheim.dll not found under '$(ValheimManaged)'. Set ValheimDir to your Valheim install directory." />
+  </Target>
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.18.2" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>Libs\0Harmony.dll</HintPath>
+      <HintPath>$(BepInExCore)\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="assembly_valheim">
-      <HintPath>Libs\assembly_valheim.dll</HintPath>
+      <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="assembly_utils">
-      <HintPath>Libs\assembly_utils.dll</HintPath>
+      <HintPath>$(ValheimManaged)\assembly_utils.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>Libs\BepInEx.dll</HintPath>
+      <HintPath>$(BepInExCore)\BepInEx.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -59,11 +76,11 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>Libs\UnityEngine.dll</HintPath>
+      <HintPath>$(ValheimManaged)\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>Libs\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(ValheimManaged)\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
