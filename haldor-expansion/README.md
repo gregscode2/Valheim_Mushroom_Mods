@@ -3,7 +3,7 @@
 Private Valheim mod. Adds five gathering materials to Haldor's stock to relieve
 resource scarcity on a long-lived dedicated server.
 
-See [DESIGN.md](DESIGN.md) for the full design and the reasoning behind each decision.
+See [DESIGN.md](docs/DESIGN.md) for the full design and the reasoning behind each decision.
 
 ## Build
 

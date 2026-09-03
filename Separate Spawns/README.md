@@ -2,7 +2,7 @@
 
 A Valheim mod (BepInEx) that splits players into groups at world creation and gives each group its own starting area, far from the other groups, with everything needed to progress through the early game. Each group is linked back to the world center by a private portal.
 
-Terminology used below is defined in [CONTEXT.md](./CONTEXT.md).
+Terminology used below is defined in [CONTEXT.md](docs/CONTEXT.md).
 
 ## Player and group configuration
 

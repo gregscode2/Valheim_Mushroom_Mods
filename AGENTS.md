@@ -18,20 +18,17 @@ suggests, an approach that was tried and rejected and why, a trap that cost real
 time to diagnose. Write down the reasoning, not the diff — git already has the
 diff.
 
-Where each mod keeps that material today:
+Every mod keeps that material in its own `docs/` directory. Create one if the
+mod does not have it yet.
 
 | Mod | Docs |
 |---|---|
 | CombatAdustments | `docs/shield-rework-requirements.md` |
-| CraftableSpawners | `design_decisions.md` |
-| Separate Spawns | `CONTEXT.md` |
-| haldor-expansion | `DESIGN.md` |
-| vegvisir-compass | `README.md` — its "How it works" section |
-| RandomYggdrasil | none yet; start `docs/` |
-
-New material goes in a `docs/` directory inside that mod. Where a mod already
-keeps its notes in a single top-level file, extend that file rather than opening
-a second home for the same thing.
+| CraftableSpawners | `docs/design_decisions.md` |
+| Separate Spawns | `docs/CONTEXT.md` |
+| haldor-expansion | `docs/DESIGN.md` |
+| RandomYggdrasil | none yet |
+| vegvisir-compass | none — its design lives in the README's "How it works" |
 
 ## Building
 

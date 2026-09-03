@@ -1,7 +1,7 @@
 # Combat Adjustments — Shield Rework
 
 BepInEx plugin implementing the shield stagger / durability / tower block-armor
-rework described in [`docs/shield-rework-requirements.md`](../docs/shield-rework-requirements.md).
+rework described in [`docs/shield-rework-requirements.md`](../../docs/shield-rework-requirements.md).
 
 ## What it does
 

@@ -52,7 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="design_decisions.md" />
+    <None Include="docs\design_decisions.md" />
     <None Include="ILRepack.targets" />
   </ItemGroup>
 </Project>
