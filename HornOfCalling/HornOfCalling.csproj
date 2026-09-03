@@ -6,7 +6,7 @@
     <RootNamespace>HornOfCalling</RootNamespace>
     <Version>0.1.0</Version>
     <Product>Horn of Calling</Product>
-    <Description>Adds a craftable item to the Forge. Currently a placeholder Frost Axe.</Description>
+    <Description>Adds a craftable item to the Workbench. Currently a placeholder Frost Axe.</Description>
   </PropertyGroup>
 
   <!--

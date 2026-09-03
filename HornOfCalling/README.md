@@ -1,10 +1,10 @@
 # Horn of Calling
 
-Adds a craftable item to the Forge.
+Adds a craftable item to the Workbench.
 
 > **Status: scaffold.** The item is currently a placeholder **Frost Axe** — a clone of
-> the vanilla iron axe, craftable at a level 2 Forge for 20 Iron / 10 Wood. The horn
-> itself is not implemented yet; the registration plumbing around it is.
+> the vanilla iron axe, craftable at a level 1 Workbench for 1 Wood. The horn itself is
+> not implemented yet; the registration plumbing around it is.
 
 Plain BepInEx + Harmony, no extra runtime dependency — install `HornOfCalling.dll` into
 `BepInEx/plugins/` and nothing else.
@@ -44,7 +44,7 @@ Three registration steps, all idempotent, driven from Harmony postfixes in
 | Step | Where | Why there |
 |---|---|---|
 | Clone the prefab, add to `ObjectDB.m_items` | `ObjectDB.Awake`, `ObjectDB.CopyOtherDB` | ObjectDB is built twice — a stripped main-menu copy, then the real world one |
-| Add the `Recipe` | any of the three patches | Needs the Forge, which is a *piece* and may not exist at the first `ObjectDB.Awake` |
+| Add the `Recipe` | any of the three patches | Needs the Workbench, which is a *piece* and may not exist at the first `ObjectDB.Awake` |
 | Add to `ZNetScene.m_prefabs` / `m_namedPrefabs` | `ZNetScene.Awake` | Lets the item exist as a networked object once dropped |
 
 ## Local setup
@@ -64,8 +64,8 @@ BepInEx is up if `BepInEx/LogOutput.log` appears after a launch. If it never doe
 
 ## Testing
 
-New world → `F5` → `devcommands` → `spawn FrostAxe 1`. Then build a Forge, upgrade it to
-level 2, and confirm the recipe appears for 20 Iron / 10 Wood.
+New world → `F5` → `devcommands` → `spawn FrostAxe 1`. Then stand at a Workbench and
+confirm the recipe appears for 1 Wood.
 
 The log names each registration step as it happens, so a partial failure is visible:
 

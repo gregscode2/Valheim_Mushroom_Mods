@@ -25,15 +25,14 @@ namespace HornOfCalling
         private const string CloneSourceItem = "AxeIron";
 
         /// <summary>Prefab name of the crafting station the recipe is bound to.</summary>
-        private const string StationPrefabName = "forge";
+        private const string StationPrefabName = "piece_workbench";
 
-        private const int MinStationLevel = 2;
+        private const int MinStationLevel = 1;
 
         /// <summary>Craft cost: item name, amount for the first craft, extra per upgrade level.</summary>
         private static readonly (string Item, int Amount, int PerLevel)[] Cost =
         {
-            ("Iron", 20, 10),
-            ("Wood", 10, 5),
+            ("Wood", 1, 1),
         };
 
         private static GameObject _prefab;

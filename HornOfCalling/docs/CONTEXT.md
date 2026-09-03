@@ -71,9 +71,13 @@ localization is added later, the token and the table have to land together.
 
 ## Crafting station lookup
 
-The Forge is found by scanning `Resources.FindObjectsOfTypeAll<CraftingStation>()` for
-`name == "forge"`, rather than reading it out of `ZNetScene`, because the lookup is
+The station is found by scanning `Resources.FindObjectsOfTypeAll<CraftingStation>()` for
+a matching `name`, rather than reading it out of `ZNetScene`, because the lookup is
 needed from three patch points with different guarantees about what is loaded.
+
+The names are prefab names and are not guessable from the in-game labels: the Workbench
+is `piece_workbench` while the Forge is plain `forge`. Both were confirmed from the log,
+not assumed.
 
 On failure it logs every station name it *did* find. A station prefab renamed between
 game versions otherwise shows up as a recipe that silently never appears, which is
