@@ -1,0 +1,6 @@
+# CI scratch: reference assemblies fetched by .github/workflows/release.yml
+ci-refs/
+release-artifacts/
+
+# No built DLL is committed; releases carry the artifacts.
+dist/

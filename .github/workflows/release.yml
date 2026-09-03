@@ -1,0 +1,179 @@
+name: Build mod DLLs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: >-
+          Existing release tag to attach the DLLs to. Leave blank to build only
+          and leave the output as a workflow artifact.
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+env:
+  # Valheim Dedicated Server - free and anonymous on Steam. It ships the same
+  # managed assemblies the client does, so they serve as build references
+  # without redistributing anything out of a paid install.
+  STEAM_APP_ID: "896660"
+  # Bump this to discard the cached reference assemblies and fetch them again,
+  # e.g. after a Valheim update the mods need to build against.
+  REFS_CACHE_VERSION: v1
+
+jobs:
+  build:
+    # Windows: Directory.Build.props composes reference paths with backslashes,
+    # and steamcmd needs no 32-bit shims here.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore reference assemblies
+        id: refs-cache
+        uses: actions/cache@v4
+        with:
+          path: ci-refs
+          key: refs-${{ env.REFS_CACHE_VERSION }}-${{ env.STEAM_APP_ID }}
+
+      - name: Download Valheim managed assemblies
+        if: steps.refs-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $steam = Join-Path $env:RUNNER_TEMP 'steamcmd'
+          New-Item -ItemType Directory -Force -Path $steam | Out-Null
+          Invoke-WebRequest -Uri 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip' -OutFile "$steam\steamcmd.zip"
+          Expand-Archive -Path "$steam\steamcmd.zip" -DestinationPath $steam -Force
+
+          $install = Join-Path $env:RUNNER_TEMP 'valheim-server'
+          $managed = Join-Path $install 'valheim_server_Data\Managed'
+
+          # steamcmd exits non-zero on its own self-update pass, so the presence
+          # of the assemblies is the success check rather than the exit code.
+          foreach ($attempt in 1..2) {
+            & "$steam\steamcmd.exe" +force_install_dir $install +login anonymous +app_update $env:STEAM_APP_ID validate +quit
+            if (Test-Path "$managed\assembly_valheim.dll") { break }
+            Write-Host "steamcmd attempt $attempt produced no managed assemblies; retrying."
+          }
+          if (-not (Test-Path "$managed\assembly_valheim.dll")) {
+            throw "steamcmd did not download app $env:STEAM_APP_ID - no assembly_valheim.dll under $managed"
+          }
+
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\valheim'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item -Path "$managed\*.dll" -Destination $dest
+          Write-Host "Copied $((Get-ChildItem $dest -Filter *.dll).Count) assemblies to ci-refs/valheim"
+          exit 0
+
+      - name: Download BepInEx core
+        if: steps.refs-cache.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $pkg = Invoke-RestMethod -Uri 'https://thunderstore.io/api/experimental/package/denikson/BepInExPack_Valheim/'
+          Write-Host "BepInExPack_Valheim $($pkg.latest.version_number)"
+
+          $zip = Join-Path $env:RUNNER_TEMP 'bepinex.zip'
+          $extract = Join-Path $env:RUNNER_TEMP 'bepinex'
+          Invoke-WebRequest -Uri $pkg.latest.download_url -OutFile $zip
+          Expand-Archive -Path $zip -DestinationPath $extract -Force
+
+          # The pack nests core under BepInExPack_Valheim/BepInEx/core; locate it
+          # by its contents so a layout change fails loudly rather than silently.
+          $core = Get-ChildItem -Path $extract -Recurse -Filter 'BepInEx.dll' |
+                  Select-Object -First 1 -ExpandProperty DirectoryName
+          if (-not $core) { throw "BepInEx.dll not found anywhere under $extract" }
+
+          $dest = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\bepinex'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item -Path "$core\*.dll" -Destination $dest
+
+      - name: Verify reference assemblies
+        shell: pwsh
+        run: |
+          $required = @{
+            'ci-refs\valheim' = @(
+              'assembly_valheim.dll', 'assembly_utils.dll', 'assembly_guiutils.dll',
+              'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.PhysicsModule.dll',
+              'UnityEngine.InputLegacyModule.dll', 'UnityEngine.IMGUIModule.dll', 'UnityEngine.UI.dll',
+              'UnityEngine.TextRenderingModule.dll', 'UnityEngine.AnimationModule.dll',
+              'UnityEngine.AudioModule.dll', 'UnityEngine.ParticleSystemModule.dll',
+              'UnityEngine.ImageConversionModule.dll'
+            )
+            'ci-refs\bepinex' = @('BepInEx.dll', '0Harmony.dll', 'BepInEx.Harmony.dll')
+          }
+          $missing = @()
+          foreach ($dir in $required.Keys) {
+            foreach ($name in $required[$dir]) {
+              if (-not (Test-Path (Join-Path $dir $name))) { $missing += (Join-Path $dir $name) }
+            }
+          }
+          if ($missing) {
+            Write-Host 'Missing reference assemblies:'
+            $missing | ForEach-Object { Write-Host "  $_" }
+            throw 'Reference set is incomplete. Bump REFS_CACHE_VERSION to refetch, or update the required list if the mods no longer need them.'
+          }
+
+      - name: Build every mod
+        shell: pwsh
+        run: |
+          $managed = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\valheim'
+          $core    = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\bepinex'
+          $out     = Join-Path $env:GITHUB_WORKSPACE 'release-artifacts'
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+
+          # One mod per top-level directory. ValheimManaged / BepInExCore go in as
+          # global properties, which override the local-install defaults that
+          # Directory.Build.props assumes.
+          $projects = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Directory |
+            Where-Object { $_.Name -notin @('ci-refs', 'release-artifacts', 'dist') -and $_.Name -notlike '.*' } |
+            ForEach-Object { Get-ChildItem -Path $_.FullName -Recurse -Filter '*.csproj' } |
+            Where-Object { $_.FullName -notmatch '\\(bin|obj)\\' }
+
+          if (-not $projects) { throw 'No .csproj found in any subdirectory.' }
+
+          foreach ($proj in $projects) {
+            $rel = Resolve-Path -Relative $proj.FullName
+            Write-Host "::group::Building $rel"
+
+            dotnet build $proj.FullName -c Release --nologo -p:ValheimManaged=$managed -p:BepInExCore=$core
+            if ($LASTEXITCODE -ne 0) { throw "Build failed: $rel" }
+
+            $target = (dotnet msbuild $proj.FullName -getProperty:TargetPath -p:Configuration=Release -p:ValheimManaged=$managed -p:BepInExCore=$core).Trim()
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $target)) {
+              throw "Could not locate build output for $rel (TargetPath='$target')"
+            }
+
+            Copy-Item -Path $target -Destination $out
+            Write-Host "Collected $(Split-Path $target -Leaf)"
+            Write-Host '::endgroup::'
+          }
+
+          Get-ChildItem $out -Filter *.dll | Format-Table Name, Length
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-dlls
+          path: release-artifacts/*.dll
+          if-no-files-found: error
+
+      - name: Attach DLLs to the release
+        if: github.event_name == 'release' || inputs.release_tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # The tag reaches the script through the environment rather than inline
+          # interpolation, so a dispatch input cannot be read as PowerShell.
+          RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+        run: |
+          $files = Get-ChildItem 'release-artifacts' -Filter *.dll | ForEach-Object { $_.FullName }
+          gh release upload $env:RELEASE_TAG $files --clobber
+          if ($LASTEXITCODE -ne 0) { throw "gh release upload failed for tag '$env:RELEASE_TAG'" }

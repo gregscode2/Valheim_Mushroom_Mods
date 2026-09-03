@@ -84,17 +84,9 @@
   </Target>
 
   <!--
-    Publishes the built plugin to dist/, which is committed so the DLL can be
-    downloaded straight from the repo without a build step.
+    No DLL is committed. Releases are built and published by
+    .github/workflows/release.yml, which attaches the assembly to the GitHub
+    release - so a downloaded plugin always corresponds to a tagged commit.
   -->
-  <PropertyGroup>
-    <RepoRoot>$(MSBuildThisFileDirectory)..\..\</RepoRoot>
-    <DistDir>$(RepoRoot)dist\</DistDir>
-  </PropertyGroup>
-
-  <Target Name="CopyToDist" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DistDir)" />
-    <Message Importance="high" Text="Published $(TargetFileName) -> $(DistDir)" />
-  </Target>
 
 </Project>

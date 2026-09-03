@@ -62,8 +62,8 @@ installed on the dedicated server *and* on every connecting client.
 
 ## Installing
 
-Download **[`dist/VegvisirCompass.dll`](dist/VegvisirCompass.dll)** and drop it
-into `BepInEx/plugins/`:
+Download **`VegvisirCompass.dll`** from the
+[latest release](../../releases/latest) and drop it into `BepInEx/plugins/`:
 
 ```
 Valheim/
@@ -139,12 +139,15 @@ by creating `Directory.Build.user.props` (gitignored):
 </Project>
 ```
 
-Every build does two things with the output: deploys it into `BepInEx/plugins`
-for immediate testing, and copies it to `dist/`, which is committed so the DLL
-can be downloaded without building anything.
+Every build deploys the output into `BepInEx/plugins` so it is immediately
+testable. Valheim holds the DLL open while running, so a mid-session rebuild
+warns rather than failing — close the game and rebuild to deploy.
 
-Valheim holds the DLL open while running, so a mid-session rebuild warns rather
-than failing — close the game and rebuild to deploy.
+No built DLL is committed. Publishing a GitHub release runs
+[`.github/workflows/release.yml`](../.github/workflows/release.yml), which builds
+every mod in the repo against reference assemblies it fetches itself and attaches
+the DLLs to that release — so a downloaded plugin always corresponds to a tagged
+commit.
 
 ## How it works
 

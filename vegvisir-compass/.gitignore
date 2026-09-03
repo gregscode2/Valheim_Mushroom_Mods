@@ -38,8 +38,9 @@ Directory.Build.user.props
 
 
 # ---- Packaging ----
-# The built DLL IS committed, so it can be downloaded straight from the repo
-# without a build step.
+# No built DLL is committed. Releases are produced by
+# .github/workflows/release.yml and attached to the GitHub release.
+dist/
 
 # ---- OS noise ----
 Thumbs.db
