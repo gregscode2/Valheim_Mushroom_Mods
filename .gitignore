@@ -9,9 +9,9 @@ release-artifacts/
 [Oo]bj/
 dist/
 
-# ---- Game assemblies (copyrighted - never commit) ----
-# Referenced from the local Steam install, and fetched by CI from the free
-# dedicated server. Vendored copies under Libs/ are no longer tracked.
+# ---- Game code (copyrighted - never commit) ----
+# Assemblies are referenced from the local Steam install, and fetched by CI
+# from the free dedicated server. Vendored copies under Libs/ are not tracked.
 Libs/
 Libraries/
 assembly_*.dll
@@ -19,6 +19,10 @@ Assembly-CSharp.dll
 UnityEngine*.dll
 BepInEx*.dll
 0Harmony*.dll
+
+# Decompiled game source. Keep it locally for looking up method names if you
+# like - it just must never be committed.
+Decompiled/
 
 # ---- Local machine config ----
 Directory.Build.user.props
