@@ -3,9 +3,23 @@
 How the mods get built and published, and how to check the pipeline still works
 before you rely on it.
 
-Everything here is handled by
-[`.github/workflows/release.yml`](../.github/workflows/release.yml), a single
-workflow named **Build mod DLLs**.
+| | |
+|---|---|
+| [`.github/actions/build-mods`](../.github/actions/build-mods/action.yml) | Fetches the reference assemblies and builds every mod. All the real logic lives here |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — **CI** | Compile check on every push and pull request |
+| [`.github/workflows/release.yml`](../.github/workflows/release.yml) — **Build mod DLLs** | Same build, plus attaching the DLLs to a release |
+
+Both workflows call the same composite action, so a change to how the mods are
+built lands in both at once. Only the release upload is workflow-specific.
+
+## Compile checks
+
+Pushes and pull requests run **CI** automatically — no action needed. It builds
+every mod and fails on the first one that does not compile, and keeps the DLLs
+as a 7-day artifact if you want to grab a dev build.
+
+Documentation-only changes are skipped via `paths-ignore` (`**.md`, `docs/**`,
+`LICENSE`), and a newer push to the same branch cancels an in-flight run.
 
 ## Smoke test
 
@@ -88,7 +102,8 @@ Global properties beat anything a project sets itself, which is what overrides
 the hardcoded local install paths (`F:\Steam\...`, Steam-registry lookups) that
 resolve to nothing on a runner.
 
-The whole tree is cached. Bump `REFS_CACHE_VERSION` in the workflow to discard
+The whole tree is cached, and both workflows share one cache. Bump
+`refs-cache-version` in the composite action to discard
 it and refetch — worth doing after a Valheim update the mods need to build
 against. A cold run takes roughly two minutes; a cached one about half that.
 

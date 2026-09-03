@@ -5,11 +5,15 @@ for a large no-map dedicated server.
 
 ## Docs
 
-**Releasing, CI, or anything about the build workflow** — read
-[docs/devops.md](docs/devops.md). It covers the `ci-test` smoke test, how CI
-sources the game assemblies it cannot commit, what a new mod must do to be
-discovered by the release workflow, and the log lines that look like failures
-but are not.
+**Releasing, CI, or anything about the build workflows** — read
+[docs/devops.md](docs/devops.md). It covers the compile check that runs on every
+push, the `ci-test` release smoke test, how CI sources the game assemblies it
+cannot commit, what a new mod must do to be discovered, and the log lines that
+look like failures but are not.
+
+Both workflows build through the same composite action,
+[`.github/actions/build-mods`](.github/actions/build-mods/action.yml) — change
+how the mods are built there, not in a workflow.
 
 **Working inside a mod directory** — read that mod's own docs before you touch
 its code, and record what you learn there when you are done. The material that

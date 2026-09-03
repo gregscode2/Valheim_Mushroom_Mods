@@ -1,5 +1,8 @@
 name: Build mod DLLs
 
+# Builds every mod and attaches the DLLs to a release. The build itself lives in
+# .github/actions/build-mods, shared with the CI workflow so the two cannot
+# drift; only the upload is specific to releasing.
 on:
   release:
     types: [published]
@@ -15,180 +18,16 @@ on:
 permissions:
   contents: write
 
-env:
-  # Valheim Dedicated Server - free and anonymous on Steam. It ships the same
-  # managed assemblies the client does, so they serve as build references
-  # without redistributing anything out of a paid install.
-  STEAM_APP_ID: "896660"
-  # Bump this to discard the cached reference assemblies and fetch them again,
-  # e.g. after a Valheim update the mods need to build against.
-  REFS_CACHE_VERSION: v1
-
 jobs:
   build:
-    # Windows: Directory.Build.props composes reference paths with backslashes,
-    # and steamcmd needs no 32-bit shims here.
+    # Windows: the mods compose reference paths with backslashes, and steamcmd
+    # needs no 32-bit shims here.
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Restore reference assemblies
-        id: refs-cache
-        uses: actions/cache@v4
-        with:
-          path: ci-refs
-          key: refs-${{ env.REFS_CACHE_VERSION }}-${{ env.STEAM_APP_ID }}
-
-      - name: Download Valheim managed assemblies
-        if: steps.refs-cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          $steam = Join-Path $env:RUNNER_TEMP 'steamcmd'
-          New-Item -ItemType Directory -Force -Path $steam | Out-Null
-          Invoke-WebRequest -Uri 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip' -OutFile "$steam\steamcmd.zip"
-          Expand-Archive -Path "$steam\steamcmd.zip" -DestinationPath $steam -Force
-
-          $install = Join-Path $env:RUNNER_TEMP 'valheim-server'
-          $managed = Join-Path $install 'valheim_server_Data\Managed'
-
-          # steamcmd exits non-zero on its own self-update pass, so the presence
-          # of the assemblies is the success check rather than the exit code.
-          foreach ($attempt in 1..2) {
-            & "$steam\steamcmd.exe" +force_install_dir $install +login anonymous +app_update $env:STEAM_APP_ID validate +quit
-            if (Test-Path "$managed\assembly_valheim.dll") { break }
-            Write-Host "steamcmd attempt $attempt produced no managed assemblies; retrying."
-          }
-          if (-not (Test-Path "$managed\assembly_valheim.dll")) {
-            throw "steamcmd did not download app $env:STEAM_APP_ID - no assembly_valheim.dll under $managed"
-          }
-
-          # Assembled into a synthetic *client* install layout, not a flat folder.
-          # The mods disagree on how they name their reference root - ValheimDir,
-          # GamePath, ValheimManaged/BepInExCore - but they all expect the same
-          # shape underneath it, so one root satisfies every convention.
-          $dest = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\valheim-root\valheim_Data\Managed'
-          New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          Copy-Item -Path "$managed\*.dll" -Destination $dest
-          Write-Host "Copied $((Get-ChildItem $dest -Filter *.dll).Count) assemblies to $dest"
-          exit 0
-
-      - name: Download BepInEx core
-        if: steps.refs-cache.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          $pkg = Invoke-RestMethod -Uri 'https://thunderstore.io/api/experimental/package/denikson/BepInExPack_Valheim/'
-          Write-Host "BepInExPack_Valheim $($pkg.latest.version_number)"
-
-          $zip = Join-Path $env:RUNNER_TEMP 'bepinex.zip'
-          $extract = Join-Path $env:RUNNER_TEMP 'bepinex'
-          Invoke-WebRequest -Uri $pkg.latest.download_url -OutFile $zip
-          Expand-Archive -Path $zip -DestinationPath $extract -Force
-
-          # The pack nests core under BepInExPack_Valheim/BepInEx/core; locate it
-          # by its contents so a layout change fails loudly rather than silently.
-          $core = Get-ChildItem -Path $extract -Recurse -Filter 'BepInEx.dll' |
-                  Select-Object -First 1 -ExpandProperty DirectoryName
-          if (-not $core) { throw "BepInEx.dll not found anywhere under $extract" }
-
-          $dest = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\valheim-root\BepInEx\core'
-          New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          Copy-Item -Path "$core\*.dll" -Destination $dest
-
-      - name: Verify reference assemblies
-        shell: pwsh
-        run: |
-          # The union of what every mod references. A mod that adds a new one gets
-          # a named failure here rather than a wall of CS0246 later.
-          $required = @{
-            'ci-refs\valheim-root\valheim_Data\Managed' = @(
-              'assembly_valheim.dll', 'assembly_utils.dll', 'assembly_guiutils.dll',
-              'UnityEngine.dll', 'UnityEngine.CoreModule.dll', 'UnityEngine.PhysicsModule.dll',
-              'UnityEngine.InputLegacyModule.dll', 'UnityEngine.IMGUIModule.dll', 'UnityEngine.UI.dll',
-              'UnityEngine.TextRenderingModule.dll', 'UnityEngine.AnimationModule.dll',
-              'UnityEngine.AudioModule.dll', 'UnityEngine.ParticleSystemModule.dll',
-              'UnityEngine.ImageConversionModule.dll', 'Unity.TextMeshPro.dll'
-            )
-            'ci-refs\valheim-root\BepInEx\core' = @('BepInEx.dll', '0Harmony.dll', 'BepInEx.Harmony.dll')
-          }
-          $missing = @()
-          foreach ($dir in $required.Keys) {
-            foreach ($name in $required[$dir]) {
-              if (-not (Test-Path (Join-Path $dir $name))) { $missing += (Join-Path $dir $name) }
-            }
-          }
-          if ($missing) {
-            Write-Host 'Missing reference assemblies:'
-            $missing | ForEach-Object { Write-Host "  $_" }
-            throw 'Reference set is incomplete. Bump REFS_CACHE_VERSION to refetch, or update the required list if the mods no longer need them.'
-          }
-
-      - name: Build every mod
-        shell: pwsh
-        run: |
-          $root    = Join-Path $env:GITHUB_WORKSPACE 'ci-refs\valheim-root'
-          $managed = Join-Path $root 'valheim_Data\Managed'
-          $core    = Join-Path $root 'BepInEx\core'
-          $out     = Join-Path $env:GITHUB_WORKSPACE 'release-artifacts'
-          New-Item -ItemType Directory -Force -Path $out | Out-Null
-
-          # The mods each named their reference root differently, so every known
-          # spelling is supplied as an MSBuild global property. Globals beat any
-          # value a project sets itself, so this overrides the hardcoded local
-          # install paths (F:\Steam\..., Steam-registry lookups) that would
-          # otherwise resolve to nothing on a runner. A mod using none of these
-          # names - because it vendors its own Libs\ - is unaffected.
-          $refProps = @(
-            "-p:ValheimManaged=$managed",   # vegvisir-compass
-            "-p:BepInExCore=$core",         # vegvisir-compass
-            "-p:ValheimDir=$root",          # CombatAdjustments, haldor-expansion
-            "-p:GamePath=$root"             # CraftableSpawners
-          )
-
-          # Not every .csproj in the tree is a shippable mod. Anything matching
-          # these path segments is skipped: build output, dev tooling, and
-          # decompiled game source that must never be compiled or published.
-          $skipSegments = '\\(bin|obj|tools|Decompiled)\\'
-
-          $projects = Get-ChildItem -Path $env:GITHUB_WORKSPACE -Directory |
-            Where-Object { $_.Name -notin @('ci-refs', 'release-artifacts', 'dist') -and $_.Name -notlike '.*' } |
-            ForEach-Object { Get-ChildItem -Path $_.FullName -Recurse -Filter '*.csproj' } |
-            Where-Object { $_.FullName -notmatch $skipSegments }
-
-          if (-not $projects) { throw 'No .csproj found in any subdirectory.' }
-
-          Write-Host "Building $($projects.Count) project(s):"
-          $projects | ForEach-Object { Write-Host "  $(Resolve-Path -Relative $_.FullName)" }
-
-          foreach ($proj in $projects) {
-            $rel = Resolve-Path -Relative $proj.FullName
-            Write-Host "::group::Building $rel"
-
-            dotnet build $proj.FullName -c Release --nologo @refProps
-            if ($LASTEXITCODE -ne 0) { throw "Build failed: $rel" }
-
-            $target = (dotnet msbuild $proj.FullName -getProperty:TargetPath -p:Configuration=Release @refProps).Trim()
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $target)) {
-              throw "Could not locate build output for $rel (TargetPath='$target')"
-            }
-
-            # Two mods emitting the same assembly name would silently overwrite
-            # each other in the artifact folder.
-            $leaf = Split-Path $target -Leaf
-            if (Test-Path (Join-Path $out $leaf)) {
-              throw "Two projects both produce '$leaf'. Rename one, or exclude it from the build."
-            }
-
-            Copy-Item -Path $target -Destination $out
-            Write-Host "Collected $leaf"
-            Write-Host '::endgroup::'
-          }
-
-          Get-ChildItem $out -Filter *.dll | Format-Table Name, Length
+      - uses: ./.github/actions/build-mods
 
       - name: Upload build output
         uses: actions/upload-artifact@v4
