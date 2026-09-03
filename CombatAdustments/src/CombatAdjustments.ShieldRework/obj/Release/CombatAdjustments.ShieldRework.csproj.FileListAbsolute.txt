@@ -1,0 +1,9 @@
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.csproj.AssemblyReference.cache
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.AssemblyInfoInputs.cache
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.AssemblyInfo.cs
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.csproj.CoreCompileInputs.cache
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\bin\Release\CombatAdjustments.ShieldRework.dll
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\bin\Release\CombatAdjustments.ShieldRework.pdb
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.dll
+C:\Users\Abortipus\source\repos\CombatAdustments\src\CombatAdjustments.ShieldRework\obj\Release\CombatAdjustments.ShieldRework.pdb

@@ -1,0 +1,82 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.8": {
+      "ILRepack.Lib.MSBuild.Task/2.0.18.2": {
+        "type": "package",
+        "build": {
+          "build/ILRepack.Lib.MSBuild.Task.targets": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "ILRepack.Lib.MSBuild.Task/2.0.18.2": {
+      "sha512": "lreK19MMDA/ekeqjLY4w171cG7+pHwjeTMHMNq6tghuhTOIOfHT+b/LTMj5jpfbJoR7J6AMD3yOYZoyY/2wtJA==",
+      "type": "package",
+      "path": "ilrepack.lib.msbuild.task/2.0.18.2",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/ILRepack.Lib.MSBuild.Task.dll",
+        "build/ILRepack.Lib.MSBuild.Task.targets",
+        "ilrepack.lib.msbuild.task.2.0.18.2.nupkg.sha512",
+        "ilrepack.lib.msbuild.task.nuspec"
+      ]
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.8": [
+      "ILRepack.Lib.MSBuild.Task >= 2.0.18.2"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Abortipus\\AppData\\Local\\Temp\\cursor-sandbox-cache\\b2eef4d66333f9638e4020671bba7651\\nuget": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Abortipus\\source\\repos\\RandomYggdrasil\\RandomYggdrasil\\RandomYggdrasil.csproj",
+      "projectName": "RandomYggdrasil",
+      "projectPath": "C:\\Users\\Abortipus\\source\\repos\\RandomYggdrasil\\RandomYggdrasil\\RandomYggdrasil.csproj",
+      "packagesPath": "C:\\Users\\Abortipus\\AppData\\Local\\Temp\\cursor-sandbox-cache\\b2eef4d66333f9638e4020671bba7651\\nuget",
+      "outputPath": "C:\\Users\\Abortipus\\source\\repos\\RandomYggdrasil\\RandomYggdrasil\\obj\\",
+      "projectStyle": "PackageReference",
+      "skipContentFileWrite": true,
+      "UsingMicrosoftNETSdk": false,
+      "configFilePaths": [
+        "C:\\Users\\Abortipus\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net48"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net48": {
+          "framework": "net48",
+          "projectReferences": {}
+        }
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      }
+    },
+    "frameworks": {
+      "net48": {
+        "framework": "net48",
+        "dependencies": {
+          "ILRepack.Lib.MSBuild.Task": {
+            "target": "Package",
+            "version": "[2.0.18.2, )"
+          }
+        }
+      }
+    }
+  }
+}

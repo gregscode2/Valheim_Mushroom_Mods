@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "fAkbaRLtAU0=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Abortipus\\source\\repos\\RandomYggdrasil\\RandomYggdrasil\\RandomYggdrasil.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Abortipus\\AppData\\Local\\Temp\\cursor-sandbox-cache\\b2eef4d66333f9638e4020671bba7651\\nuget\\ilrepack.lib.msbuild.task\\2.0.18.2\\ilrepack.lib.msbuild.task.2.0.18.2.nupkg.sha512"
+  ],
+  "logs": []
+}
