@@ -1,4 +1,7 @@
 # Mushroom Mods
+
+[![CI](https://github.com/NickSpinosa/Valheim_Mushroom_Mods/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/NickSpinosa/Valheim_Mushroom_Mods/actions/workflows/ci.yml)
+
 Mushroom mods are a small collection of utility and quality of life mods designed for large nomap servers
 
 ## Mods
