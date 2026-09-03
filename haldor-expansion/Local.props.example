@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copy to Local.props (gitignored) and set to your own install. -->
+<Project>
+  <PropertyGroup>
+    <ValheimDir>E:\Games\Steam\steamapps\common\Valheim</ValheimDir>
+    <!-- Set to false to skip the post-build copy into BepInEx\plugins. -->
+    <CopyToPlugins>true</CopyToPlugins>
+  </PropertyGroup>
+</Project>

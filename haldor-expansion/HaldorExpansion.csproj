@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="Local.props" Condition="Exists('Local.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>HaldorExpansion</AssemblyName>
+    <RootNamespace>HaldorExpansion</RootNamespace>
+    <Version>0.3.0</Version>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <!-- Game assemblies are not CLS-compliant and produce noisy analyzer output. -->
+    <NoWarn>$(NoWarn);CS0649;MSB3277</NoWarn>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+  </ItemGroup>
+
+  <Target Name="CheckValheimDir" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(ValheimDir)' == ''"
+           Text="ValheimDir is not set. Copy Local.props.example to Local.props and set your install path." />
+    <Error Condition="!Exists('$(ValheimDir)\valheim_Data\Managed\assembly_valheim.dll')"
+           Text="assembly_valheim.dll not found under '$(ValheimDir)'. Check ValheimDir in Local.props." />
+  </Target>
+
+  <PropertyGroup>
+    <ManagedDir>$(ValheimDir)\valheim_Data\Managed</ManagedDir>
+    <BepInExCoreDir>$(ValheimDir)\BepInEx\core</BepInExCoreDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(ManagedDir)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils">
+      <HintPath>$(ManagedDir)\assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCoreDir)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExCoreDir)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CopyToPluginsFolder" AfterTargets="Build"
+          Condition="'$(CopyToPlugins)' == 'true' And Exists('$(ValheimDir)\BepInEx\plugins')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ValheimDir)\BepInEx\plugins" />
+    <Message Importance="high" Text="Copied $(TargetFileName) -> $(ValheimDir)\BepInEx\plugins" />
+  </Target>
+
+</Project>
