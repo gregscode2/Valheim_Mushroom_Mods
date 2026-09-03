@@ -17,10 +17,28 @@ Mushroom mods are a small collection of utility and quality of life mods designe
 
 ## Installing
 
-Download the DLLs you want from the [latest release](../../releases/latest) and
-drop them into `BepInEx/plugins/`. Most of these mods are server-authoritative,
-so install them on **every client and on the dedicated server** — check each
-mod's own README.
+Download **`MushroomMods-plugins.zip`** from the
+[latest release](../../releases/latest) and extract it into your Valheim
+`BepInEx/` directory. The zip holds a `plugins/` folder, so every mod lands in
+`BepInEx/plugins/` in one step:
+
+```
+Valheim/
+└── BepInEx/
+    └── plugins/
+        ├── CombatAdjustments.ShieldRework.dll
+        ├── CraftableSpawners.dll
+        ├── HaldorExpansion.dll
+        ├── RandomYggdrasil.dll
+        ├── SeparateSpawns.dll
+        └── VegvisirCompass.dll
+```
+
+Want only some of them? Extract the zip and delete the DLLs you do not want —
+each mod is independent.
+
+Most of these mods are server-authoritative, so install them on **every client
+and on the dedicated server**; check each mod's own README.
 
 No built DLL is committed to this repo; releases carry the artifacts.
 

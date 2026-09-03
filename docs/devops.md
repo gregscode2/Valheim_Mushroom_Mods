@@ -7,7 +7,7 @@ before you rely on it.
 |---|---|
 | [`.github/actions/build-mods`](../.github/actions/build-mods/action.yml) | Fetches the reference assemblies and builds every mod. All the real logic lives here |
 | [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) — **CI** | Compile check on every push and pull request |
-| [`.github/workflows/release.yml`](../.github/workflows/release.yml) — **Build mod DLLs** | Same build, plus attaching the DLLs to a release |
+| [`.github/workflows/release.yml`](../.github/workflows/release.yml) — **Build mod DLLs** | Same build, plus packaging the DLLs and attaching them to a release |
 
 Both workflows call the same composite action, so a change to how the mods are
 built lands in both at once. Only the release upload is workflow-specific.
@@ -31,10 +31,10 @@ changing how any mod resolves its references:
 gh workflow run "Build mod DLLs" --ref main -f release_tag=ci-test
 ```
 
-It builds every mod and attaches the DLLs to that draft, exercising the exact
-path a real release takes — including `gh release upload`, which is otherwise
-only reached when a release is published. The upload uses `--clobber`, so the
-same draft can be reused indefinitely.
+It builds every mod, packages them, and attaches the zip to that draft,
+exercising the exact path a real release takes — including `gh release upload`,
+which is otherwise only reached when a release is published. The upload uses
+`--clobber`, so the same draft can be reused indefinitely.
 
 Check the result:
 
@@ -55,8 +55,8 @@ gh release create ci-test --draft --title "CI smoke test" --notes "Not a real re
 ```
 
 To build without touching any release at all — useful when you only care that
-the mods compile — dispatch with `release_tag` left blank. The DLLs come out as
-a normal Actions artifact and the upload step is skipped:
+the mods compile — dispatch with `release_tag` left blank. The zip still gets
+built and comes out as a normal Actions artifact; only the upload is skipped:
 
 ```bash
 gh workflow run "Build mod DLLs" --ref main
@@ -64,9 +64,22 @@ gh workflow run "Build mod DLLs" --ref main
 
 ## Cutting a real release
 
-Publishing a GitHub release fires the workflow on `release: [published]` and
-attaches every mod's DLL to it. No built DLL is committed to the repo, so a
-downloaded plugin always corresponds to a tagged commit.
+Publishing a GitHub release fires the workflow on `release: [published]`, which
+builds every mod and attaches one asset: **`MushroomMods-plugins.zip`**. No
+built DLL is committed to the repo, so a downloaded plugin always corresponds to
+a tagged commit.
+
+The zip contains a single `plugins/` folder holding every mod's DLL, so
+extracting it into a Valheim `BepInEx/` directory installs the lot in one step.
+A release asset is always a file, never a directory — the zip is how a folder
+gets attached.
+
+Its entry names are written with explicit forward slashes. Both
+`Compress-Archive` and `ZipFile::CreateFromDirectory` emit **backslashes** on
+.NET Framework, which violates the zip spec; some extractors then produce one
+file literally named `plugins\Foo.dll` instead of a folder. Runner `pwsh` is
+new enough to get it right on its own, but the packaging step does not rely on
+that.
 
 ## How CI gets the game assemblies
 
@@ -161,8 +174,9 @@ once. Attempt 2 succeeds.
 **`Download Valheim managed assemblies` / `Download BepInEx core` skipped** —
 a cache hit. The reference tree was restored instead of refetched.
 
-**`Attach DLLs to the release` skipped** — the run was a dispatch with no
-`release_tag`. Only a published release or an explicit tag triggers the upload.
+**`Attach the plugins folder to the release` skipped** — the run was a dispatch
+with no `release_tag`. Only a published release or an explicit tag triggers the
+upload.
 
 ## Never commit
 

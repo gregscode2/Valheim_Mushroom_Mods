@@ -62,8 +62,10 @@ installed on the dedicated server *and* on every connecting client.
 
 ## Installing
 
-Download **`VegvisirCompass.dll`** from the
-[latest release](../../releases/latest) and drop it into `BepInEx/plugins/`:
+Releases ship every Mushroom mod together. Download
+**`MushroomMods-plugins.zip`** from the
+[latest release](../../releases/latest), take `VegvisirCompass.dll` out of its
+`plugins/` folder, and drop it into `BepInEx/plugins/`:
 
 ```
 Valheim/
