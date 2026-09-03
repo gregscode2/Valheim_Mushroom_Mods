@@ -1,0 +1,100 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>VegvisirCompass</AssemblyName>
+    <RootNamespace>VegvisirCompass</RootNamespace>
+    <Version>1.6.0</Version>
+    <Product>Vegvisir Compass</Product>
+    <Authors>dHobbs17</Authors>
+    <Description>Loot a limited-use compass from a Vegvisir that points you at its boss. Built for no-map playthroughs.</Description>
+  </PropertyGroup>
+
+  <!--
+    A handful of the members we need (ObjectDB.UpdateRegisters, ZNetScene.m_namedPrefabs)
+    are private. The publicizer rewrites the reference assemblies at build time only -
+    it changes nothing at runtime and adds no dependency for players.
+  -->
+  <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!--
+    The item icon is embedded rather than shipped alongside, so installing stays a
+    single DLL with nothing else to place.
+    Source: "Compass PBR(Unity) CC0" by Lucian Pavel, CC0.
+    https://opengameart.org/content/compass-pbrunity-cc0
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\compass_icon.png" LogicalName="VegvisirCompass.compass_icon.png" />
+  </ItemGroup>
+
+  <!--
+    Game and BepInEx assemblies are referenced straight out of the local install.
+    Private=false keeps them out of bin/ - they already exist at runtime, and
+    shipping copies would both bloat the plugin and redistribute game binaries.
+  -->
+  <ItemGroup>
+    <Reference Include="assembly_valheim" Publicize="true">
+      <HintPath>$(ValheimManaged)\assembly_valheim.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="assembly_utils" Publicize="true">
+      <HintPath>$(ValheimManaged)\assembly_utils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Localization lives here, not in assembly_valheim. -->
+    <Reference Include="assembly_guiutils" Publicize="true">
+      <HintPath>$(ValheimManaged)\assembly_guiutils.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="UnityEngine;UnityEngine.CoreModule;UnityEngine.PhysicsModule;UnityEngine.InputLegacyModule;UnityEngine.IMGUIModule;UnityEngine.UI;UnityEngine.TextRenderingModule;UnityEngine.AnimationModule;UnityEngine.AudioModule;UnityEngine.ParticleSystemModule;UnityEngine.ImageConversionModule">
+      <HintPath>$(ValheimManaged)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx;0Harmony;BepInEx.Harmony">
+      <HintPath>$(BepInExCore)\%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--
+    Drop the built plugin straight into BepInEx/plugins so a build is immediately
+    testable. Skipped silently when the folder is absent (e.g. CI).
+  -->
+  <Target Name="DeployToBepInEx" AfterTargets="Build" Condition="Exists('$(BepInExPlugins)')">
+    <!--
+      Valheim keeps the plugin DLL memory-mapped while it is running, so this copy
+      fails with a file lock mid-session. That must not fail the build: the assembly
+      compiled fine, it just cannot be deployed until the game is closed.
+    -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(BepInExPlugins)" Retries="0" ContinueOnError="WarnAndContinue">
+      <Output TaskParameter="CopiedFiles" ItemName="DeployedPlugin" />
+    </Copy>
+    <Message Importance="high" Condition="'@(DeployedPlugin)' != ''"
+             Text="Deployed $(TargetFileName) -> $(BepInExPlugins)" />
+    <Warning Condition="'@(DeployedPlugin)' == ''"
+             Text="Build succeeded but the plugin could not be deployed - Valheim is holding the DLL. Close the game and rebuild." />
+  </Target>
+
+  <!--
+    Publishes the built plugin to dist/, which is committed so the DLL can be
+    downloaded straight from the repo without a build step.
+  -->
+  <PropertyGroup>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\..\</RepoRoot>
+    <DistDir>$(RepoRoot)dist\</DistDir>
+  </PropertyGroup>
+
+  <Target Name="CopyToDist" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(DistDir)" />
+    <Message Importance="high" Text="Published $(TargetFileName) -> $(DistDir)" />
+  </Target>
+
+</Project>

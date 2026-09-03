@@ -1,0 +1,47 @@
+# ---- Build output ----
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.suo
+*.userprefs
+*.cache
+
+# ---- Visual Studio / Rider / VS Code ----
+.vs/
+.idea/
+*.csproj.user
+*.sln.docstates
+launchSettings.json
+
+# ---- NuGet ----
+*.nupkg
+packages/
+.nuget/
+
+# ---- Game assemblies (copyrighted - never commit) ----
+# Referenced directly from the local Steam install via ValheimPath.
+lib/
+libs/
+refs/
+assembly_*.dll
+Assembly-CSharp.dll
+UnityEngine*.dll
+BepInEx*.dll
+0Harmony*.dll
+
+# ---- Local machine config ----
+# Per-developer path to the Valheim install; not portable, do not commit.
+Directory.Build.user.props
+*.local.props
+
+
+# ---- Packaging ----
+# The built DLL IS committed, so it can be downloaded straight from the repo
+# without a build step.
+
+# ---- OS noise ----
+Thumbs.db
+desktop.ini
+.DS_Store

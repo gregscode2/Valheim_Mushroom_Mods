@@ -1,0 +1,39 @@
+<Project>
+
+  <!--
+    Per-developer overrides. Create Directory.Build.user.props next to this file to
+    point ValheimPath at a non-default install; it is gitignored so it never travels
+    with the repo. Imported first so it wins over the default below.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
+          Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
+
+  <PropertyGroup>
+    <ValheimPath Condition="'$(ValheimPath)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Valheim</ValheimPath>
+    <ValheimManaged>$(ValheimPath)\valheim_Data\Managed</ValheimManaged>
+    <BepInExCore>$(ValheimPath)\BepInEx\core</BepInExCore>
+    <BepInExPlugins>$(ValheimPath)\BepInEx\plugins</BepInExPlugins>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <!-- Unity ships its own core libs; never copy the BCL next to the plugin. -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <DebugType>portable</DebugType>
+    <Deterministic>true</Deterministic>
+    <!--
+      MSB3277: netstandard2.1's reference assemblies and Unity's Mono BCL ship
+      different System.Net.Http versions. The plugin never touches HttpClient,
+      and at runtime only Unity's copy exists, so the conflict is noise.
+    -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+  </PropertyGroup>
+
+  <Target Name="VerifyValheimPath" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('$(ValheimManaged)\assembly_valheim.dll')"
+           Text="Could not find assembly_valheim.dll under '$(ValheimManaged)'. Set ValheimPath in Directory.Build.user.props to your Valheim install directory." />
+  </Target>
+
+</Project>
