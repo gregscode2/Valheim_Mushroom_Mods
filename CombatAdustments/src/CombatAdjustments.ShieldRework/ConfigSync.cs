@@ -411,6 +411,7 @@ internal static class ConfigSync
         {
             ShieldStats.ApplyToObjectDB(ObjectDB.instance);
             WeaponBlockStats.ApplyToObjectDB(ObjectDB.instance);
+            FeastStats.ApplyToObjectDB(ObjectDB.instance);
         }
     }
 

@@ -12,7 +12,7 @@ public class ShieldReworkPlugin : BaseUnityPlugin
 {
     public const string PluginGuid = "Abortipus.CombatAdjustments.ShieldRework";
     public const string PluginName = "Combat Adjustments - Shield Rework";
-    public const string PluginVersion = "0.4.8";
+    public const string PluginVersion = "0.5.0";
 
     // Design anchors (max quality). See docs/shield-rework-requirements.md.
     public const float FlametalTowerGrant = 70f;
@@ -41,6 +41,14 @@ public class ShieldReworkPlugin : BaseUnityPlugin
     internal static ConfigEntry<bool> EnableWeaponBlockPerLevel = null!;
     internal static ConfigEntry<int> GrantTableVersion = null!;
     internal static ConfigEntry<string> TooltipColorHex = null!;
+
+    internal static ConfigEntry<bool> EnableFeastStatBonuses = null!;
+    internal static ConfigEntry<float> FeastHealthBonus = null!;
+    internal static ConfigEntry<float> FeastStaminaBonus = null!;
+    internal static ConfigEntry<float> SailorsFeastHealthBonus = null!;
+    internal static ConfigEntry<float> SailorsFeastStaminaBonus = null!;
+    internal static ConfigEntry<float> MistlandsFeastEitrBonus = null!;
+    internal static ConfigEntry<float> AshlandsFeastEitrBonus = null!;
 
     private Harmony? _harmony;
 
@@ -73,6 +81,21 @@ public class ShieldReworkPlugin : BaseUnityPlugin
         TooltipColorHex = ModConfig.Bind("Tooltip", "StaggerColorHex", "#E85AC8",
             "Hex color for the stagger grant tooltip line (matches HUD stagger pink).");
 
+        EnableFeastStatBonuses = ModConfig.Bind("Feasts", "EnableStatBonuses", true,
+            "Add extra health / stamina / eitr to feast foods. Boss unlocks are not configurable and always apply.");
+        FeastHealthBonus = ModConfig.Bind("Feasts", "HealthBonus", 10f,
+            "Extra max health added to every feast except Sailor's Bounty.");
+        FeastStaminaBonus = ModConfig.Bind("Feasts", "StaminaBonus", 10f,
+            "Extra max stamina added to every feast except Sailor's Bounty.");
+        SailorsFeastHealthBonus = ModConfig.Bind("Feasts", "SailorsHealthBonus", 15f,
+            "Extra max health added to Sailor's Bounty (instead of HealthBonus).");
+        SailorsFeastStaminaBonus = ModConfig.Bind("Feasts", "SailorsStaminaBonus", 15f,
+            "Extra max stamina added to Sailor's Bounty (instead of StaminaBonus).");
+        MistlandsFeastEitrBonus = ModConfig.Bind("Feasts", "MistlandsEitrBonus", 7f,
+            "Extra eitr added to Mushrooms Galore à la Mistlands (vanilla 33 → 40). Also receives HealthBonus / StaminaBonus.");
+        AshlandsFeastEitrBonus = ModConfig.Bind("Feasts", "AshlandsEitrBonus", 12f,
+            "Extra eitr added to Ashlands Gourmet Bowl (vanilla 38 → 50). Also receives HealthBonus / StaminaBonus.");
+
         _harmony = new Harmony(PluginGuid);
         _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
@@ -85,6 +108,13 @@ public class ShieldReworkPlugin : BaseUnityPlugin
         ConfigSync.Register(AreaAdrenalinePerEnemy);
         ConfigSync.Register(EnableWeaponBlockPerLevel);
         ConfigSync.Register(TooltipColorHex);
+        ConfigSync.Register(EnableFeastStatBonuses);
+        ConfigSync.Register(FeastHealthBonus);
+        ConfigSync.Register(FeastStaminaBonus);
+        ConfigSync.Register(SailorsFeastHealthBonus);
+        ConfigSync.Register(SailorsFeastStaminaBonus);
+        ConfigSync.Register(MistlandsFeastEitrBonus);
+        ConfigSync.Register(AshlandsFeastEitrBonus);
         HookConfigChangeBroadcast(EnableStaggerGrant);
         HookConfigChangeBroadcast(EnableTowerArmorBonus);
         HookConfigChangeBroadcast(EnableDurabilityBonus);
@@ -94,6 +124,13 @@ public class ShieldReworkPlugin : BaseUnityPlugin
         HookConfigChangeBroadcast(AreaAdrenalinePerEnemy);
         HookConfigChangeBroadcast(EnableWeaponBlockPerLevel);
         HookConfigChangeBroadcast(TooltipColorHex);
+        HookFeastConfigChange(EnableFeastStatBonuses);
+        HookFeastConfigChange(FeastHealthBonus);
+        HookFeastConfigChange(FeastStaminaBonus);
+        HookFeastConfigChange(SailorsFeastHealthBonus);
+        HookFeastConfigChange(SailorsFeastStaminaBonus);
+        HookFeastConfigChange(MistlandsFeastEitrBonus);
+        HookFeastConfigChange(AshlandsFeastEitrBonus);
         ApplyOverlayToStaticEntries();
         ConfigSync.Initialize(_harmony);
 
@@ -117,6 +154,14 @@ public class ShieldReworkPlugin : BaseUnityPlugin
 
     private static void HookConfigChangeBroadcast<T>(ConfigEntry<T> entry) =>
         entry.SettingChanged += (_, __) => ConfigSync.OnServerConfigChanged();
+
+    private static void HookFeastConfigChange<T>(ConfigEntry<T> entry) =>
+        entry.SettingChanged += (_, __) =>
+        {
+            if (ObjectDB.instance != null)
+                FeastStats.ApplyToObjectDB(ObjectDB.instance);
+            ConfigSync.OnServerConfigChanged();
+        };
 
     private static void ApplyOverlayToStaticEntries() =>
         ConfigPaths.ApplyOverlayToStaticEntries(ModConfig);
