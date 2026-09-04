@@ -45,6 +45,29 @@ Adding an item by hand is not hard; getting it to happen at the right moment is.
   an item cloned from an incomplete database. Both entry points are patched, and
   `EnsureRegistered` guards on `odb.GetItemPrefab("Wood") == null` to detect the
   main-menu copy and bail.
+
+- **`CopyOtherDB` does not merge — it replaces.** The name suggests copying entries in.
+  It actually reassigns the list references outright:
+
+  ```csharp
+  m_items   = other.m_items;
+  m_recipes = other.m_recipes;
+  ```
+
+  So everything registered against the main-menu database is discarded when a world
+  loads. **Never latch a "registered" boolean**; test the live list every time. This cost
+  real time to find because the failure is asymmetric and looks nothing like its cause:
+  item registration re-tests `odb.m_items.Contains(_prefab)` and so silently healed
+  itself, while the recipe used a `_recipeAdded` flag and stayed gone. The symptom was
+  `spawn FrostAxe` working perfectly while the workbench showed nothing — which reads
+  like a recipe bug, not a lifecycle one.
+
+- **No patch point is guaranteed to be both late enough and ordered correctly.**
+  `CopyOtherDB` can replace the recipe list while the crafting station prefabs are still
+  unloaded, and `ZNetScene.Awake` may already have run by then, leaving no retry. The
+  backstop is a prefix on `Player.UpdateKnownRecipesList`, which runs immediately before
+  the game enumerates recipes — the one moment the recipe is definitely needed. With the
+  presence check the common case is a single list scan.
 - **The recipe cannot be built at the first `ObjectDB.Awake`.** A `Recipe` needs a
   `CraftingStation`, which is a component on a *piece* prefab, not an item — so it does
   not live in `ObjectDB` and may not exist yet. Recipe registration is therefore a

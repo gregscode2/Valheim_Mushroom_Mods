@@ -36,6 +36,31 @@ namespace HornOfCalling
     }
 
     /// <summary>
+    /// The backstop, and the only patch point with a real guarantee behind it.
+    ///
+    /// The three registration events above each depend on ordering that is not
+    /// promised: ObjectDB.CopyOtherDB can replace the recipe list at a moment when the
+    /// crafting station prefabs are not loaded yet, and ZNetScene.Awake may already
+    /// have run by then, leaving nothing to retry. This runs immediately before the
+    /// game enumerates recipes, so if the recipe is missing it is put back in time to
+    /// be seen. The presence check in EnsureRecipeRegistered makes the common case a
+    /// single list scan.
+    /// </summary>
+    [HarmonyPatch(typeof(Player), "UpdateKnownRecipesList")]
+    internal static class UpdateKnownRecipesListPatch
+    {
+        [HarmonyPrefix]
+        internal static void Prefix()
+        {
+            try
+            {
+                FrostAxeItem.EnsureRecipeRegistered(ObjectDB.instance);
+            }
+            catch (System.Exception e) { Plugin.Log.LogError("Recipe re-registration failed: " + e); }
+        }
+    }
+
+    /// <summary>
     /// The point where both the item and its crafting station are certain to exist.
     /// ObjectDB.Awake can run before the station prefabs are loaded, which leaves the
     /// recipe unregistered - this is where that gets picked up.

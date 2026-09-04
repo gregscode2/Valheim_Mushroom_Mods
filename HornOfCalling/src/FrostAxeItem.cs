@@ -37,7 +37,7 @@ namespace HornOfCalling
 
         private static GameObject _prefab;
         private static GameObject _prefabContainer;
-        private static bool _recipeAdded;
+        private static Recipe _recipe;
 
         // --- Registration -------------------------------------------------------
 
@@ -71,16 +71,30 @@ namespace HornOfCalling
         /// Adds the crafting recipe. Separate from EnsureRegistered because it needs the
         /// crafting station, which is a *piece* and so only exists once ZNetScene has
         /// built its prefab list - later than the first ObjectDB.Awake.
+        ///
+        /// Deliberately tests the live recipe list rather than latching a "done" flag:
+        /// ObjectDB.CopyOtherDB does `m_recipes = other.m_recipes`, replacing the list
+        /// wholesale, so a recipe registered against the main-menu database is gone by
+        /// the time a world finishes loading and has to be added again.
         /// </summary>
         internal static void EnsureRecipeRegistered(ObjectDB odb)
         {
-            if (_recipeAdded || _prefab == null || odb == null || odb.m_recipes == null) return;
+            if (_prefab == null || odb == null || odb.m_recipes == null) return;
 
             ItemDrop item = _prefab.GetComponent<ItemDrop>();
             if (item == null) return;
 
+            foreach (Recipe existing in odb.m_recipes)
+            {
+                if (existing != null && existing.m_item == item) return;
+            }
+
             CraftingStation station = FindStation();
             if (station == null) return; // Not up yet; a later patch will retry.
+
+            // Rebuilt rather than re-added, because the requirements reference ItemDrops
+            // out of whichever ObjectDB is current, and that is the thing that just changed.
+            if (_recipe != null) Object.Destroy(_recipe);
 
             var resources = new List<Piece.Requirement>();
             foreach ((string name, int amount, int perLevel) in Cost)
@@ -103,19 +117,20 @@ namespace HornOfCalling
                 });
             }
 
-            Recipe recipe = ScriptableObject.CreateInstance<Recipe>();
-            recipe.name = "Recipe_" + PrefabName;
-            recipe.m_item = item;
-            recipe.m_amount = 1;
-            recipe.m_enabled = true;
-            recipe.m_craftingStation = station;
-            recipe.m_repairStation = station;
-            recipe.m_minStationLevel = MinStationLevel;
-            recipe.m_resources = resources.ToArray();
+            _recipe = ScriptableObject.CreateInstance<Recipe>();
+            _recipe.name = "Recipe_" + PrefabName;
+            _recipe.m_item = item;
+            _recipe.m_amount = 1;
+            _recipe.m_enabled = true;
+            _recipe.m_craftingStation = station;
+            _recipe.m_repairStation = station;
+            _recipe.m_minStationLevel = MinStationLevel;
+            _recipe.m_resources = resources.ToArray();
 
-            odb.m_recipes.Add(recipe);
-            _recipeAdded = true;
-            Plugin.Log.LogInfo("Registered the " + PrefabName + " recipe at " + StationPrefabName + ".");
+            odb.m_recipes.Add(_recipe);
+            Plugin.Log.LogInfo(
+                "Registered the " + PrefabName + " recipe at " + StationPrefabName +
+                " (" + odb.m_recipes.Count + " recipes).");
         }
 
         /// <summary>
