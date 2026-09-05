@@ -6,8 +6,18 @@
     <RootNamespace>HornOfCalling</RootNamespace>
     <Version>0.1.0</Version>
     <Product>Horn of Calling</Product>
-    <Description>Adds a craftable item to the Workbench. Currently a placeholder Frost Axe.</Description>
+    <Description>Adds a craftable Horn of Calling that sounds a blast when used.</Description>
   </PropertyGroup>
+
+  <!--
+    The horn blast, embedded rather than shipped beside the DLL so a release stays a
+    single file. Committed as 16-bit PCM: it is decoded by hand at runtime, which needs
+    no file on disk and no coroutine. Regenerate from a source recording with:
+      ffmpeg -fflags +bitexact -i <in> -ac 1 -ar 44100 -c:a pcm_s16le -flags +bitexact assets/viking.wav
+  -->
+  <ItemGroup>
+    <EmbeddedResource Include="assets/viking.wav" LogicalName="HornOfCalling.viking.wav" />
+  </ItemGroup>
 
   <!--
     ObjectDB.UpdateRegisters and ZNetScene.m_namedPrefabs are private, and both are
@@ -36,7 +46,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="UnityEngine;UnityEngine.CoreModule;UnityEngine.PhysicsModule">
+    <Reference Include="UnityEngine;UnityEngine.CoreModule;UnityEngine.PhysicsModule;UnityEngine.AudioModule">
       <HintPath>$(ValheimManaged)/%(Identity).dll</HintPath>
       <Private>false</Private>
     </Reference>

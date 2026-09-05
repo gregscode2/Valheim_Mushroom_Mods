@@ -16,8 +16,8 @@ namespace HornOfCalling
         {
             try
             {
-                FrostAxeItem.EnsureRegistered(__instance);
-                FrostAxeItem.EnsureRecipeRegistered(__instance);
+                HornItem.EnsureRegistered(__instance);
+                HornItem.EnsureRecipeRegistered(__instance);
             }
             catch (System.Exception e) { Plugin.Log.LogError("ObjectDB.Awake registration failed: " + e); }
         }
@@ -28,8 +28,8 @@ namespace HornOfCalling
         {
             try
             {
-                FrostAxeItem.EnsureRegistered(__instance);
-                FrostAxeItem.EnsureRecipeRegistered(__instance);
+                HornItem.EnsureRegistered(__instance);
+                HornItem.EnsureRecipeRegistered(__instance);
             }
             catch (System.Exception e) { Plugin.Log.LogError("ObjectDB.CopyOtherDB registration failed: " + e); }
         }
@@ -54,7 +54,7 @@ namespace HornOfCalling
         {
             try
             {
-                FrostAxeItem.EnsureRecipeRegistered(ObjectDB.instance);
+                HornItem.EnsureRecipeRegistered(ObjectDB.instance);
             }
             catch (System.Exception e) { Plugin.Log.LogError("Recipe re-registration failed: " + e); }
         }
@@ -75,13 +75,13 @@ namespace HornOfCalling
             {
                 // ZNetScene.Awake can run before ObjectDB has been populated, so make
                 // sure the item exists before registering it for networking.
-                FrostAxeItem.EnsureRegistered(ObjectDB.instance);
-                FrostAxeItem.EnsureRecipeRegistered(ObjectDB.instance);
-                FrostAxeItem.EnsureNetworkRegistered(__instance);
+                HornItem.EnsureRegistered(ObjectDB.instance);
+                HornItem.EnsureRecipeRegistered(ObjectDB.instance);
+                HornItem.EnsureNetworkRegistered(__instance);
             }
             catch (System.Exception e)
             {
-                Plugin.Log.LogError("Failed to register " + FrostAxeItem.PrefabName + " with ZNetScene: " + e);
+                Plugin.Log.LogError("Failed to register " + HornItem.PrefabName + " with ZNetScene: " + e);
             }
         }
     }

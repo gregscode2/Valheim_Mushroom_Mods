@@ -1,10 +1,11 @@
 # Horn of Calling
 
-Adds a craftable item to the Workbench.
+Adds a craftable **Horn of Calling** to the Workbench. Equip it and left click to sound
+a blast.
 
-> **Status: scaffold.** The item is currently a placeholder **Frost Axe** — a clone of
-> the vanilla iron axe, craftable at a level 1 Workbench for 1 Wood. The horn itself is
-> not implemented yet; the registration plumbing around it is.
+> **Status: in progress.** The horn looks and sounds right; the cost is still the
+> scaffold's **1 Wood at a level 1 Workbench**, and the blast is heard only by the
+> player who sounds it. See [Not done yet](#not-done-yet).
 
 Plain BepInEx + Harmony, no extra runtime dependency — install `HornOfCalling.dll` into
 `BepInEx/plugins/` and nothing else.
@@ -45,7 +46,59 @@ Three registration steps, all idempotent, driven from Harmony postfixes in
 |---|---|---|
 | Clone the prefab, add to `ObjectDB.m_items` | `ObjectDB.Awake`, `ObjectDB.CopyOtherDB` | ObjectDB is built twice — a stripped main-menu copy, then the real world one |
 | Add the `Recipe` | any of the three patches | Needs the Workbench, which is a *piece* and may not exist at the first `ObjectDB.Awake` |
-| Add to `ZNetScene.m_prefabs` / `m_namedPrefabs` | `ZNetScene.Awake` | Lets the item exist as a networked object once dropped |
+| Add to `ZNetScene.m_prefabs` / `m_namedPrefabs` | `ZNetScene.Awake` | Lets the item and its sound effect exist as networked objects |
+
+The item is cloned from the vanilla **Horn of Celebration** (prefab `TankardAnniversary`),
+which supplies the horn model, the icon and the hold pose without an AssetBundle.
+
+The clone needs three things undone. Its `m_ammoType` is `"mead"` — vanilla, the horn
+drinks a mead from your inventory when you sound it, and refuses to sound at all without
+one — so that is cleared. Its inherited weapon stats (knockback, backstab, block, parry)
+are zeroed so the tooltip is just the flavour text. And its start effects, a mead splash
+and a burp, are replaced by the blast.
+
+The blast is not played by a patch. The clip — a 16-bit PCM WAV embedded in the
+assembly, decoded in [`src/HornSound.cs`](src/HornSound.cs) — is hung off the item's
+`m_startEffect`, which the game fires once per attack after the stamina check. That
+also routes it through the SFX mixer group, so the player's volume slider applies.
+
+## Not done yet
+
+From the design note, still open:
+
+- Cost of **1 Bronze + 1 Deerhide** (currently 1 Wood, which keeps testing cheap).
+- **10 stamina** per use — `m_attack.m_attackStamina`, currently `0`.
+- The **roar emote** instead of the inherited `emote_drink`.
+- The viking should **appear to hold nothing**.
+- Reaching **other players beyond the ZDO active area** (~64 m). Other players *do*
+  hear the blast today, out to 64 m — see [Range](#range) — but the design note's 200 m
+  is past what the zone grid delivers and needs a `ZRoutedRpc` broadcast.
+- **Hold** left click to sustain the sound, release to stop. It is one-shot per click.
+
+## Range
+
+Other players hear the horn. The effect prefab carries a `ZNetView`, so spawning it
+creates a ZDO that replicates to nearby peers, whose `ZNetScene` resolves it by hash and
+plays it locally — which is why the effect prefab is registered with `ZNetScene`
+alongside the item.
+
+Two independent limits apply, and the smaller one wins:
+
+| Limit | Value | Set by |
+|---|---|---|
+| Audible falloff | 64 m | the custom rolloff curve in [`src/HornSound.cs`](src/HornSound.cs) |
+| ZDO replication | ~64 m guaranteed | `ZoneSystem.m_activeArea` (1) × `m_zoneSize` (64 m) |
+
+The falloff is a plateau curve, tuned in the `Falloff` table:
+
+| Distance | Volume |
+|---|---|
+| 0 – 20 m | 100% |
+| 20 – 40 m | 50% |
+| 40 – 64 m | 30% |
+
+Raising the audible range past ~64 m does nothing on its own: peers outside their active
+area never receive the object, so no volume setting reaches them.
 
 ## Local setup
 
@@ -64,8 +117,12 @@ BepInEx is up if `BepInEx/LogOutput.log` appears after a launch. If it never doe
 
 ## Testing
 
-New world → `F5` → `devcommands` → `spawn FrostAxe 1`. Then stand at a Workbench and
-confirm the recipe appears for 1 Wood.
+New world → `F5` → `devcommands` → `spawn HornOfCalling 1 1 p`. Then stand at a
+Workbench and confirm the recipe appears for 1 Wood. Equip the horn and left click — the
+blast is ~4.9 s.
+
+The prefab name is case-sensitive and is *not* the display name: `spawn "Horn of Calling"`
+will not work.
 
 The log names each registration step as it happens, so a partial failure is visible:
 
