@@ -36,7 +36,11 @@ namespace HornOfCalling
         /// <summary>Craft cost: item name, amount for the first craft, extra per upgrade level.</summary>
         private static readonly (string Item, int Amount, int PerLevel)[] Cost =
         {
-            ("Wood", 1, 1),
+            // Prefab names, not display names, and the near-misses are real items:
+            // "Bronze" is the bar ("BronzeScrap" is Scrap Bronze), and "DeerHide" is
+            // specifically a deer's ("Hide" is the generic one).
+            ("Bronze", 1, 1),
+            ("DeerHide", 1, 1),
         };
 
         private static GameObject _prefab;

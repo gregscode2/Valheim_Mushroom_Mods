@@ -3,9 +3,9 @@
 Adds a craftable **Horn of Calling** to the Workbench. Equip it and left click to sound
 a blast.
 
-> **Status: in progress.** The horn looks and sounds right; the cost is still the
-> scaffold's **1 Wood at a level 1 Workbench**, and the blast is heard only by the
-> player who sounds it. See [Not done yet](#not-done-yet).
+> **Status: in progress.** The horn looks and sounds right, costs **1 Bronze + 1 Deer
+> Hide** at a level 1 Workbench, and is heard by other players out to 64 m. What is left
+> is the behaviour: see [Not done yet](#not-done-yet).
 
 Plain BepInEx + Harmony, no extra runtime dependency — install `HornOfCalling.dll` into
 `BepInEx/plugins/` and nothing else.
@@ -66,7 +66,6 @@ also routes it through the SFX mixer group, so the player's volume slider applie
 
 From the design note, still open:
 
-- Cost of **1 Bronze + 1 Deerhide** (currently 1 Wood, which keeps testing cheap).
 - **10 stamina** per use — `m_attack.m_attackStamina`, currently `0`.
 - The **roar emote** instead of the inherited `emote_drink`.
 - The viking should **appear to hold nothing**.
@@ -120,8 +119,10 @@ BepInEx is up if `BepInEx/LogOutput.log` appears after a launch. If it never doe
 ## Testing
 
 New world → `F5` → `devcommands` → `spawn HornOfCalling 1 1 p`. Then stand at a
-Workbench and confirm the recipe appears for 1 Wood. Equip the horn and left click — the
-blast is ~4.9 s.
+Workbench and confirm the recipe appears for 1 Bronze + 1 Deer Hide. Equip the horn and
+left click — the blast is ~4.9 s.
+
+`spawn Bronze 1` and `spawn DeerHide 1` put the materials in reach for a quick check.
 
 The prefab name is case-sensitive and is *not* the display name: `spawn "Horn of Calling"`
 will not work.
