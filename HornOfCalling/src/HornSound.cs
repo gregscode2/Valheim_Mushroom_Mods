@@ -36,8 +36,14 @@ namespace HornOfCalling
         private const float MaxDistance = 64f;
 
         /// <summary>
-        /// The falloff, as (metres, volume) points on a plateau curve: full volume out
-        /// to 20 m, half to 40 m, then 30% to the edge of the network range.
+        /// The falloff, as (metres, volume) points on a plateau curve: full volume out to
+        /// 15 m, then 18 points off every 10 m until 28%, which holds from 45 m to the
+        /// edge of the network range.
+        ///
+        /// The step is 18 points rather than a rounder 10 so the descent spans the
+        /// audible range in whole tiers. At 10 points a tier the horn is still at 50%
+        /// where the network cuts it off at <see cref="MaxDistance"/>, because nine
+        /// tiers are needed to fall from 100% to a floor and nine of them reach 105 m.
         ///
         /// The doubled points half a metre past each boundary are what make the steps
         /// steps: with flat tangents on every key, two keys of equal value hold a level
@@ -46,12 +52,16 @@ namespace HornOfCalling
         /// </summary>
         private static readonly (float Metres, float Volume)[] Falloff =
         {
-            (0f, 1.0f),
-            (20f, 1.0f),
-            (20.5f, 0.5f),
-            (40f, 0.5f),
-            (40.5f, 0.3f),
-            (MaxDistance, 0.3f),
+            (0f, 1.00f),
+            (15f, 1.00f),
+            (15.5f, 0.82f),
+            (25f, 0.82f),
+            (25.5f, 0.64f),
+            (35f, 0.64f),
+            (35.5f, 0.46f),
+            (45f, 0.46f),
+            (45.5f, 0.28f),
+            (MaxDistance, 0.28f),
         };
 
         private static AudioClip _clip;

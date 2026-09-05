@@ -93,9 +93,11 @@ The falloff is a plateau curve, tuned in the `Falloff` table:
 
 | Distance | Volume |
 |---|---|
-| 0 – 20 m | 100% |
-| 20 – 40 m | 50% |
-| 40 – 64 m | 30% |
+| 0 – 15 m | 100% |
+| 15 – 25 m | 82% |
+| 25 – 35 m | 64% |
+| 35 – 45 m | 46% |
+| 45 – 64 m | 28% |
 
 Raising the audible range past ~64 m does nothing on its own: peers outside their active
 area never receive the object, so no volume setting reaches them.
